@@ -1,0 +1,180 @@
+from gpiozero import LED, Button, LightSensor, RGBLED
+from time import sleep
+import random
+import os
+from guizero import App, Text, TextBox, PushButton, Box, Waffle, Picture
+from sense_hat import SenseHat
+
+led17 = LED(17)
+led27 = LED(27)
+led22 = LED(22)
+btn18 = Button(18)
+btn12 = Button(12)
+btn16 = Button(16)
+btn20 = Button(20)
+ldr5 = LightSensor(5, 5, 0.01, 0.6)
+colorled = RGBLED(red=6, green=19, blue=13)
+sense = SenseHat()
+
+
+def allon():
+    led17.on()
+    my_waffle.set_pixel(0,0,"blue")
+    #led17_status.color("blue")
+    led27.on()
+    my_waffle.set_pixel(1,0,"red")
+    #led27_status.color("red")
+    led22.on()
+    my_waffle.set_pixel(2,0,"orange")
+    #led22_status.color("orange")
+    playsound2()
+    
+
+def alloff():
+    led17.off()
+    #led17_status.color("black")
+    led27.off()
+    #led27_status.color("black")
+    led22.off()
+    #led22_status.color("black")
+    my_waffle.set_all("grey")
+    colorled.color = (0,0,0)
+    playsound1()
+    
+
+def playsound1():
+    os.system('omxplayer /home/pi/Downloads/example.mp3')
+
+def playsound2():
+    os.system('omxplayer /home/pi/Downloads/pingas.mp3')
+
+def playsound3():
+    os.system('omxplayer /home/pi/Downloads/billygoat.mp3')
+
+def randomcolors():
+    r = round(random.random(),2)
+    g = round(random.random(),2)
+    b = round(random.random(),2)
+    colorled.color=(r,g,b)
+    playsound3()
+
+def seq():
+    led17.off(), led27.off(), led22.off()
+    my_waffle.set_all("grey")
+    #led17_status.color("black")
+    #led27_status.color("black")
+    #led22_status.color("black")
+    led17.on()
+    my_waffle.set_pixel(0,0,"blue")
+    #led17_status.color("blue")
+    sleep(0.5)
+    led27.on()
+    my_waffle.set_pixel(1,0,"red")
+    #led27_status.color("red")
+    sleep(0.5)
+    led22.on()
+    my_waffle.set_pixel(2,0,"orange")
+    #led22_status.color("orange")
+    sleep(0.5)
+    playsound2()
+
+def seqoff():
+    led17.on(), led27.on(), led22.on()
+    #led17_status.color("blue")
+    #led27_status.color("red")
+    #led22_status.color("orange")
+    my_waffle.set_pixel(0,0,"blue")
+    my_waffle.set_pixel(1,0,"red")
+    my_waffle.set_pixel(2,0,"orange")
+    led17.off()
+    my_waffle.set_pixel(0,0,"grey")
+    #led17_status.color("black")
+    sleep(0.5)
+    led27.off()
+    my_waffle.set_pixel(1,0,"grey")
+    #led27_status.color("black")
+    sleep(0.5)
+    led22.off()
+    my_waffle.set_pixel(2,0,"grey")
+    #led22_status.color("black")
+    sleep(0.5)
+    playsound3()
+
+def show_name():
+    sense.show_message(my_textbox.get())
+    my_textbox.set("")
+
+def get_temp():
+    temp_data = round(sense.get_temperature(), 2)
+    return(temp_data)
+
+def get_pres():
+    pres_data = round(sense.get_pressure(), 2)
+    return(pres_data)
+
+def get_hum():
+    hum_data = round(sense.get_humidity(), 2)
+    return(hum_data)
+
+   
+def update_data():
+    temp_data.set(get_temp())
+    temp_data.after(1000, update_data)
+    pres_data.set(get_pres())
+    hum_data.set(get_hum())
+
+def ledblue():
+    led17.toggle()
+    if led17.is_lit:
+        my_waffle.set_pixel(0,0,"blue")
+    else:
+        my_waffle.set_pixel(0,0,"grey")
+
+def ledred():
+    led27.toggle()
+    if led27.is_lit:
+        my_waffle.set_pixel(1,0,"red")
+    else:
+        my_waffle.set_pixel(1,0,"grey")
+
+def ledorange():
+    led22.toggle()
+    if led22.is_lit:
+        my_waffle.set_pixel(2,0,"orange")
+    else:
+        my_waffle.set_pixel(2,0,"grey")
+
+btn18.when_pressed = allon
+btn12.when_pressed = alloff
+btn16.when_pressed = seq
+btn20.when_pressed = randomcolors
+
+
+app = App(title="Open Day Demo", height=1080, width=980)
+#app.attributes("-fullscreen", True)
+welcome_message = Text(app, text="Welcome to Electrotechnology Open Day", size=40, font='Times New Roman', color="blue")
+my_textbox = TextBox(app, width=20)
+scroll_text = PushButton(app, command = show_name, text="Show the name in scroll", pady=20, padx=20)
+my_waffle = Waffle(app, height=1, width=3, dim=40, dotty=True)
+my_waffle.set_all("grey")
+
+box1 = Box(app, layout='grid')
+pb1 = PushButton(box1, command=ledblue, text = "Blue LED", grid=[0,0])
+pb2 = PushButton(box1, command=ledred, text = "Red LED", grid=[0,1])
+pb3 = PushButton(box1, command=ledorange, text = "Orange LED", grid=[0,2])
+
+box2 = Box(app, layout='grid')
+temp_img = Picture(box2, image='/home/pi/Pictures/temp150.gif', grid=[0,0])
+#temp_text = Text(box2, text="Temperature", grid=[0,0])
+temp_data = Text(box2, text=get_temp(), size=30, grid=[0,1])
+temp_data.after(1000, update_data)
+pres_img = Picture(box2, image='/home/pi/Pictures/pres150.gif', grid=[1,0])
+#pres_text = Text(box2, text="Pressure", grid=[1,0])
+pres_data = Text(box2, text=get_pres(), size=30, grid=[1,1])
+hum_img = Picture(box2, image='/home/pi/Pictures/hum150.gif', grid=[2,0])
+#hum_text = Text(box2, text="Humidity", grid=[2,0])
+hum_data = Text(box2, text=get_hum(), size=30, grid=[2,1])
+
+
+
+app.display()
